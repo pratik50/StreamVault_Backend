@@ -1,12 +1,14 @@
 import jwt  from "jsonwebtoken"
+import dotenv from "dotenv"
 
-const jwtSecret = process.env.JWT_SECRET || "Shriram@123"
+dotenv.config()
 
-export const generateToken = (userId: any) => {
+const jwtSecret = process.env.JWT_SECRET || "Shriram@3136"
+
+export const generateToken = (userId: string) => {
     return jwt.sign({
         userId
     }, jwtSecret);
-    
 };
 
 export const verifyToken = (token: string): { userId: string } => {

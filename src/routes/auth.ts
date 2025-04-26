@@ -3,7 +3,6 @@ import { login, signup } from "../modules/auth/authController";
 
 const authRouter = express.Router();
 
-//@ts-ignore
 authRouter.post("/signup", signup);
 authRouter.post("/login", login);
 

@@ -11,19 +11,19 @@ export const AuthMiddleware = (
     res: Response,
     next: NextFunction
 ) => {
-    const authHeader = req.headers.authorization;
+    const token = req.headers.authorization;
 
-    if (!authHeader) {
-        return res.status(401).json({ message: "Unauthorized: No token provided" });
+    if (!token) {
+        res.status(401).json({ message: "Unauthorized: No token provided" });
+        return
     }
-
-    const token = authHeader.split(" ")[1];
 
     try {
         const decoded = verifyToken(token);
         req.userId = decoded.userId;
         next();
     } catch (err) {
-        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+        res.status(401).json({ message: "Unauthorized: Invalid token" });
+        return
     }
 }; 
