@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <script type="text/javascript">
+        window.onload = function () {
+          const urlParams = new URLSearchParams(window.location.search);
+          const fileUrl = urlParams.get('file');
+          if (fileUrl) {
+            // redirect inside viewer.html with file param
+            window.location.href = `viewer.html?file=${fileUrl}`;
+          } else {
+            document.body.innerText = "No file URL provided";
+          }
+        };
+    </script>
+</head>
+<body>
+<p>Loading PDF...</p>
+</body>
+</html>

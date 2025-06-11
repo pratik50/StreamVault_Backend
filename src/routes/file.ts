@@ -8,7 +8,7 @@ import { getDashboardContent } from "../modules/file/DashboardController";
 const fileRouter = express.Router();
 
 fileRouter.post("/upload", AuthMiddleware , upload.single("file"), uploadFile);
-fileRouter.post("/:id/share", AuthMiddleware, generateShareLink);
+fileRouter.post("/share/:id", AuthMiddleware, generateShareLink);
 fileRouter.get("/dashboard", AuthMiddleware, getDashboardContent);
 fileRouter.delete("/:id", AuthMiddleware, deleteFile);
 

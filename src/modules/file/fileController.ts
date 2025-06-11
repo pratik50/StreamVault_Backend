@@ -13,12 +13,28 @@ export const uploadFile = async (req: Request, res: Response) => {
     const { file } = req;
     const { userId } = req as AuthRequest;
     
-    if(!file || !userId) {
-        res.status(400).json({ message: "File or User missing" });
-        return;
+    if (!file) {
+        res.status(400).json({ message: "File is missing" });
+        return
+    }
+
+    if (!userId) {
+        res.status(400).json({ message: "Invalid or missing userId" });
+        return
     }
 
     try {
+        
+        // Verify user exists
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            res.status(400).json({ message: "Invalid userId: User does not exist" });
+            return
+        }
+
         const saved = await prisma.file.create({
             data:{
                 name: file.originalname,
