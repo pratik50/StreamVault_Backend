@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import prisma from "../../prisma/client";
 import fs from "fs";
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { videoQueue } from "../../queue/videoQueue";
 
 
 interface AuthRequest extends Request {
@@ -14,7 +16,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     const { userId } = req as AuthRequest;
     
     if (!file) {
-        res.status(400).json({ message: "File is missing" });
+        res.status(400).json({ message: "No file uploaded" });
         return
     }
 
@@ -41,14 +43,38 @@ export const uploadFile = async (req: Request, res: Response) => {
                 url: `/uploads/${file.filename}`,
                 type: file.mimetype,
                 size: file.size,
-                userId: userId
+                userId: userId,
+                streamUrl: null
             }
         });
 
+        // response as ASA file uploaded
         res.status(201).json({
             message: "File uploaded successfully",
             file: saved
         });
+        
+        console.log("vedio wills be transcoded soon")
+        const isVideo = file.mimetype.startsWith("video/"); 
+
+        if(isVideo){
+            const uniqueNameForFolders = uuidv4();
+            const hlsOutputPath = path.join("public/hsl", uniqueNameForFolders);
+            const inputPath = file.path;
+            
+            console.log("video adding to queue")
+            videoQueue.add("transcode", {
+                fileId: saved.id,
+                folderName: uniqueNameForFolders,
+                hlsOutputPath,  
+                inputPath,
+                resolutions: ["720", "1080", "480", "360", "240", "144"],
+            })
+            console.log("video added to queue")
+
+        }
+
+
     } catch(err) {
         console.error("upload error:", err);
         res.status(500).json({

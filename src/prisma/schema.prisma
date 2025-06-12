@@ -21,17 +21,20 @@ model User {
 }
 
 model File {
-  id          String    @id @default(cuid())
-  name        String
-  url         String
-  type        String
-  size        Int
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  folder      Folders?   @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  folderId    String?
-  createdAt   DateTime  @default(now())
-  shareLink   SharableLink?
+  id                  String    @id @default(cuid())
+  name                String
+  url                 String
+  type                String
+  size                Int
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String
+  folder              Folders?   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId            String?
+  createdAt           DateTime  @default(now())
+  shareLink           SharableLink?
+  isTranscoded720     Boolean @default(false)
+  isFullyTranscoded   Boolean @default(false)
+  streamUrl           String?
 }
 
 model Folders {
