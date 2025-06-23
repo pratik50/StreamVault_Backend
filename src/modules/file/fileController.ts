@@ -48,11 +48,13 @@ export const uploadFile = async (req: Request, res: Response) => {
             }
         });
 
+
         // response as ASA file uploaded
         res.status(201).json({
             message: "File uploaded successfully",
             file: saved
         });
+        
         
         console.log("vedio wills be transcoded soon")
         const isVideo = file.mimetype.startsWith("video/"); 
@@ -62,16 +64,26 @@ export const uploadFile = async (req: Request, res: Response) => {
             const hlsOutputPath = path.join("public/hsl", uniqueNameForFolders);
             const inputPath = file.path;
             
-            console.log("video adding to queue")
-            videoQueue.add("transcode", {
+            const jobData = {
                 fileId: saved.id,
                 folderName: uniqueNameForFolders,
-                hlsOutputPath,  
-                inputPath,
-                resolutions: ["720", "1080", "480", "360", "240", "144"],
-            })
-            console.log("video added to queue")
+                hlsOutputPath,
+                inputPath
+            }
 
+            console.log("video adding to queue")
+            
+            await videoQueue.add("transcode", jobData, {
+                attempts: 2,
+                backoff: {
+                    type: "fixed",
+                    delay: 10000
+                },
+                lifo: false,
+                removeOnComplete: true,
+                removeOnFail: false
+            });
+            console.log("video added to queue")
         }
 
 

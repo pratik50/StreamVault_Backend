@@ -1,5 +1,7 @@
+// Temporary file to clean the queue manually.
+
 import { Queue } from "bullmq";
-import { redisClient } from "../lib/redis"; // same client used by your app
+import { redisClient } from "../lib/redis"; 
 
 const queue = new Queue("videoQueue", { connection: redisClient });
 
@@ -7,5 +9,12 @@ const queue = new Queue("videoQueue", { connection: redisClient });
     await queue.drain(); // removes all jobs (active, delayed, waiting)
     await queue.clean(0, 1000, "completed");
     await queue.clean(0, 1000, "failed");
-    console.log("✅ Queue cleaned!");
+
+    // ✅ Clean all resolution status for demo fileIds
+    const keys = await redisClient.keys("video-status:*");
+    for (const key of keys) {
+        await redisClient.del(key);
+    }
+
+    console.log("✅ Queue & Redis progress cleaned!");
 })();

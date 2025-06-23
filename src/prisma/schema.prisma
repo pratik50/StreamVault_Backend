@@ -32,8 +32,7 @@ model File {
   folderId            String?
   createdAt           DateTime  @default(now())
   shareLink           SharableLink?
-  isTranscoded720     Boolean @default(false)
-  isFullyTranscoded   Boolean @default(false)
+  TranscodingStatus   Boolean @default(false)
   streamUrl           String?
 }
 
