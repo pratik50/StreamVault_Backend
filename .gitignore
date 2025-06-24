@@ -13,7 +13,6 @@ yarn-debug.log
 
 # TypeScript build output
 dist/
-build/
 out/
 
 # TypeScript cache

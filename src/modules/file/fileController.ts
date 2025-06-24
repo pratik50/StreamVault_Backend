@@ -56,7 +56,6 @@ export const uploadFile = async (req: Request, res: Response) => {
         });
         
         
-        console.log("vedio wills be transcoded soon")
         const isVideo = file.mimetype.startsWith("video/"); 
 
         if(isVideo){

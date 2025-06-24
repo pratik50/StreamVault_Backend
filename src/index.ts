@@ -22,10 +22,9 @@ app.use("/share", shareRouter);
 // Serve static files
 app.use('/pdfjs', express.static("public/pdfjs"));
 app.use('/build', express.static("public/build"));
+app.use("/uploads", express.static("uploads")); 
+app.use("/hls", express.static("public/hls"));
 
-app.use("/uploads", express.static("uploads")); // so /uploads/xyz.png works in browser
-
-app.use("/hls", express.static("public/hsl"));
 
 app.get("/", (req, res) => {
     res.send("✅ Your server is running here!");
