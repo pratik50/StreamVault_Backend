@@ -1,4 +1,4 @@
-import { RedisConnection, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import { converToHLS } from "../hlsTranscoding/convertToHLS";
 import prisma from "../prisma/client";
 import { generateMasterPlaylist } from "../hlsTranscoding/generateMasterPlaylist";
@@ -46,7 +46,7 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
         await prisma.file.update({
             where: { id: fileId },
             data: {
-                isFullyTranscoded: true,
+                TranscodingStatus: true,
                 streamUrl: streamUrl,
             }, 
         });

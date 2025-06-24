@@ -26,15 +26,17 @@ export const converToHLS = (
         ffmpeg(inputPath)
             .addOptions([
                 `-vf scale=-2:${resolution}`,
-                "-preset veryfast",
-                "-g 48",
-                "-sc_threshold 0",
-                "-map 0:v:0",
-                "-c:v libx264",
-                "-c:a aac",
-                "-strict -2",
-                "-hls_time 6",
-                "-hls_playlist_type vod",
+                "-preset", "veryfast",
+                "-g", "48",
+                "-sc_threshold", "0",
+                "-map", "0:v:0",
+                "-map", "0:a?",           
+                "-c:v", "libx264",
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-ac", "2",
+                "-hls_time", "6",
+                "-hls_playlist_type", "vod",
                 `-hls_segment_filename ${segmentPattern}`,
             ])
             .output(outputFile)

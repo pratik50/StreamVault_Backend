@@ -25,7 +25,6 @@ app.use('/build', express.static("public/build"));
 app.use("/uploads", express.static("uploads")); 
 app.use("/hls", express.static("public/hls"));
 
-
 app.get("/", (req, res) => {
     res.send("✅ Your server is running here!");
 });

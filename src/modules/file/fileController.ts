@@ -60,7 +60,7 @@ export const uploadFile = async (req: Request, res: Response) => {
 
         if(isVideo){
             const uniqueNameForFolders = uuidv4();
-            const hlsOutputPath = path.join("public/hsl", uniqueNameForFolders);
+            const hlsOutputPath = path.join("public/hls", uniqueNameForFolders);
             const inputPath = file.path;
             
             const jobData = {
