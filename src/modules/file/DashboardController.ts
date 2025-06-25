@@ -16,7 +16,7 @@ export const getDashboardContent = async (req: Request, res: Response) => {
         });
 
         const unfolderedFiles = await prisma.file.findMany({
-            where: { 
+            where: {
                 userId,
                 folderId: null
             }
@@ -24,7 +24,7 @@ export const getDashboardContent = async (req: Request, res: Response) => {
 
         res.status(200).json({ folders, unfolderedFiles });
 
-    } catch(err) {
+    } catch (err) {
         console.error("Dashboard error:", err);
         res.status(500).json({ message: "Could not load dashboard" });
     }

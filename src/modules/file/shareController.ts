@@ -8,7 +8,7 @@ interface AuthRequest extends Request {
 
 //Function to generate Share Link
 export const generateShareLink = async (req: Request, res: Response) => {
-    const {userId} =  req as AuthRequest;
+    const { userId } = req as AuthRequest;
     const fileId = req.params.id;
     const expiresIn = req.body?.expiresIn || 3;
 
@@ -19,8 +19,8 @@ export const generateShareLink = async (req: Request, res: Response) => {
                 id: fileId
             }
         });
-        
-        if(!file || file.userId != userId){
+
+        if (!file || file.userId != userId) {
             res.status(404).json({
                 meassage: "File not found Or Your are unautorized"
             });
@@ -43,7 +43,7 @@ export const generateShareLink = async (req: Request, res: Response) => {
 
         const shortLink = nanoid(21);
         const expiresAt = new Date(Date.now() + expiresIn * 24 * 60 * 60 * 1000); // convert to ms
-        
+
         const link = await prisma.sharableLink.create({
             data: {
                 fileId,
@@ -58,7 +58,7 @@ export const generateShareLink = async (req: Request, res: Response) => {
             expiresAt,
         });
 
-    } catch(err) {
+    } catch (err) {
         console.error("Share error:", err);
         res.status(500).json({ message: "Server error" });
     }
@@ -67,7 +67,7 @@ export const generateShareLink = async (req: Request, res: Response) => {
 //Function to get generate file
 export const getSharedFile = async (req: Request, res: Response) => {
     const { link } = req.params;
-    
+
     try {
         const shareLink = await prisma.sharableLink.findUnique({
             where: { link },

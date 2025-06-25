@@ -1,18 +1,18 @@
-import { Request, Response  } from "express";
+import { Request, Response } from "express";
 import prisma from "../../prisma/client";
 import { comparePassword, hashPassword } from "../../utils/password";
 import { generateToken } from "../../utils/jwt";
 
-export const signup = async(req: Request, res: Response) => {
-    const {email, password} = req.body;
-    try{
+export const signup = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    try {
         const existingUser = await prisma.user.findUnique({
             where: {
                 email
             }
         });
 
-        if(existingUser) {
+        if (existingUser) {
             res.status(400).json({
                 message: "User already exists"
             });
@@ -28,12 +28,12 @@ export const signup = async(req: Request, res: Response) => {
         });
 
         const token = generateToken(user.id);
-        
+
         res.status(201).json({
             token
         });
 
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({
             message: "Signup failed", error: err
         });
@@ -41,8 +41,8 @@ export const signup = async(req: Request, res: Response) => {
 }
 
 
-export const login = async(req: Request, res: Response) => {
-    const{ email, password } = req.body;
+export const login = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
 
     try {
         const user = await prisma.user.findFirst({
@@ -51,15 +51,15 @@ export const login = async(req: Request, res: Response) => {
             }
         });
 
-        if(!user) {
+        if (!user) {
             res.status(404).json({
                 message: "User not found"
             });
             return
         }
 
-        const matchPassword = await comparePassword(password,user.password);
-        if(!matchPassword) {
+        const matchPassword = await comparePassword(password, user.password);
+        if (!matchPassword) {
             res.status(401).json({
                 message: "Wrong Password"
             })
@@ -73,7 +73,7 @@ export const login = async(req: Request, res: Response) => {
             token
         });
 
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({
             message: "Login failed", error: err
         });

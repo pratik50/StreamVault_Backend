@@ -20,37 +20,42 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
 
     const progressMap = await getAllResolutionStatus(fileId);
 
-    for (const res of validVariants){
+    for (const res of validVariants) {
 
         const status = progressMap[res.height];
 
-        if(status == "done"){
+        if (status == "done") {
             console.log(`Skipping ${res.height}p , already done`);
             continue;
         }
 
-        await setResolutionStatus(fileId,res.height,"processing");
+        await setResolutionStatus(fileId, res.height, "processing");
 
         await converToHLS(inputPath, hlsOutputPath, res.height);
 
-        await setResolutionStatus(fileId,res.height,"done");
+        await setResolutionStatus(fileId, res.height, "done");
     }
 
     //generate the master playlist
-    generateMasterPlaylist(hlsOutputPath, validVariants);
+    try {
+        generateMasterPlaylist(hlsOutputPath, validVariants);
+    } catch (err) {
+        console.error("Failed to generate master playlist", err);
+    }
+
 
     // Final url for all-resolution stream
     streamUrl = `/hls/${folderName}/master.m3u8`;
-    
-    try{
+
+    try {
         await prisma.file.update({
             where: { id: fileId },
             data: {
                 TranscodingStatus: true,
                 streamUrl: streamUrl,
-            }, 
+            },
         });
-    } catch(err) {
+    } catch (err) {
         console.log(err);
     }
 
@@ -59,20 +64,19 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
 
 }, {
     connection: redisClient,
-    lockDuration: 7000,
-    lockRenewTime: 3000,
-    stalledInterval: 3000,
-    maxStalledCount: 1,
+    lockDuration: 15000,
+    lockRenewTime: 10000,
+    stalledInterval: 5000,
+    maxStalledCount: 2,
     limiter: {
         max: 1,
         duration: 1000
-    }
-}); 
+    },
+});
 
 // Function to recover the stalled/stucked jobs after restart
 export async function initializeJobRecovery() {
-    
-    // BullMQ v4+ compatible job states
+
     const RECOVERY_STATES: JobState[] = [
         'active',
         'completed',
@@ -99,7 +103,7 @@ export async function initializeJobRecovery() {
                     const redisProgress = await redisClient.hgetall(`job:${job.id}:progress`);
                     progress.timestamp = redisProgress.timestamp ? parseInt(redisProgress.timestamp) : undefined;
                 }
-                
+
                 // Check job age
                 const timestamp = progress.timestamp || job.timestamp || Date.now();
                 if (Date.now() - timestamp > 3600000) {

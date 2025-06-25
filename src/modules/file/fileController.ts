@@ -14,7 +14,7 @@ interface AuthRequest extends Request {
 export const uploadFile = async (req: Request, res: Response) => {
     const { file } = req;
     const { userId } = req as AuthRequest;
-    
+
     if (!file) {
         res.status(400).json({ message: "No file uploaded" });
         return
@@ -26,7 +26,7 @@ export const uploadFile = async (req: Request, res: Response) => {
     }
 
     try {
-        
+
         // Verify user exists
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -38,7 +38,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         }
 
         const saved = await prisma.file.create({
-            data:{
+            data: {
                 name: file.originalname,
                 url: `/uploads/${file.filename}`,
                 type: file.mimetype,
@@ -54,15 +54,15 @@ export const uploadFile = async (req: Request, res: Response) => {
             message: "File uploaded successfully",
             file: saved
         });
-        
-        
-        const isVideo = file.mimetype.startsWith("video/"); 
 
-        if(isVideo){
+
+        const isVideo = file.mimetype.startsWith("video/");
+
+        if (isVideo) {
             const uniqueNameForFolders = uuidv4();
             const hlsOutputPath = path.join("public/hls", uniqueNameForFolders);
             const inputPath = file.path;
-            
+
             const jobData = {
                 fileId: saved.id,
                 folderName: uniqueNameForFolders,
@@ -71,7 +71,7 @@ export const uploadFile = async (req: Request, res: Response) => {
             }
 
             console.log("video adding to queue")
-            
+
             await videoQueue.add("transcode", jobData, {
                 attempts: 2,
                 backoff: {
@@ -86,7 +86,7 @@ export const uploadFile = async (req: Request, res: Response) => {
         }
 
 
-    } catch(err) {
+    } catch (err) {
         console.error("upload error:", err);
         res.status(500).json({
             message: "Internal server error"
