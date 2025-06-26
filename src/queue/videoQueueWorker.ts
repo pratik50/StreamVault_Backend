@@ -51,7 +51,7 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
         await prisma.file.update({
             where: { id: fileId },
             data: {
-                TranscodingStatus: true,
+                transcodingStatus: true,
                 streamUrl: streamUrl,
             },
         });

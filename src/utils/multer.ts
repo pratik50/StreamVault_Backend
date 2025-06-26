@@ -1,13 +1,8 @@
-import multer, { FileFilterCallback } from "multer";
+import multer, { FileFilterCallback, memoryStorage } from "multer";
 import { Request } from "express";
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, "uploads/"),
-    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-
 export const upload = multer({
-    storage,
+    storage: memoryStorage(),
     fileFilter: (
         req: Request,
         file: Express.Multer.File,

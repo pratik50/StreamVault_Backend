@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import prisma from "../../prisma/client";
+import prisma from "../../../prisma/client";
 import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { videoQueue } from "../../queue/videoQueue";
-
+import { videoQueue } from "../../../queue/videoQueue";
+import { uploadToS3 } from "../../../lib/s3/uploadToS3";
 
 interface AuthRequest extends Request {
     userId: string
@@ -25,8 +25,8 @@ export const uploadFile = async (req: Request, res: Response) => {
         return
     }
 
-    try {
 
+    try {
         // Verify user exists
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -37,10 +37,13 @@ export const uploadFile = async (req: Request, res: Response) => {
             return
         }
 
+        const key = `uploads/${Date.now()}-${file.originalname}`;
+        const url = await uploadToS3(file.buffer, key, file.mimetype, false);
+
         const saved = await prisma.file.create({
             data: {
                 name: file.originalname,
-                url: `/uploads/${file.filename}`,
+                url: url,
                 type: file.mimetype,
                 size: file.size,
                 userId: userId,
@@ -48,20 +51,18 @@ export const uploadFile = async (req: Request, res: Response) => {
             }
         });
 
-
         // response as ASA file uploaded
         res.status(201).json({
             message: "File uploaded successfully",
             file: saved
         });
 
-
         const isVideo = file.mimetype.startsWith("video/");
 
         if (isVideo) {
             const uniqueNameForFolders = uuidv4();
             const hlsOutputPath = path.join("public/hls", uniqueNameForFolders);
-            const inputPath = file.path;
+            const inputPath = key;
 
             const jobData = {
                 fileId: saved.id,
@@ -69,8 +70,6 @@ export const uploadFile = async (req: Request, res: Response) => {
                 hlsOutputPath,
                 inputPath
             }
-
-            console.log("video adding to queue")
 
             await videoQueue.add("transcode", jobData, {
                 attempts: 2,
@@ -82,45 +81,12 @@ export const uploadFile = async (req: Request, res: Response) => {
                 removeOnComplete: true,
                 removeOnFail: false
             });
-            console.log("video added to queue")
+
         }
-
-
     } catch (err) {
         console.error("upload error:", err);
         res.status(500).json({
             message: "Internal server error"
         });
-    }
-};
-
-//delete file
-export const deleteFile = async (req: Request, res: Response) => {
-    const { userId } = req as AuthRequest;
-    const fileId = req.params.id;
-
-    try {
-        const file = await prisma.file.findUnique({
-            where: { id: fileId },
-        });
-
-        if (!file || file.userId !== userId) {
-            res.status(404).json({ message: "File not found or unauthorized" });
-            return;
-        }
-
-        const filePath = path.join(__dirname, "../../uploads", file.url.split("/uploads/")[1]);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-
-        await prisma.file.delete({
-            where: { id: fileId },
-        });
-
-        res.status(200).json({ message: "File deleted successfully" });
-    } catch (err) {
-        console.error("Delete file error:", err);
-        res.status(500).json({ message: "Server error" });
     }
 };

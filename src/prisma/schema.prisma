@@ -32,8 +32,10 @@ model File {
   folderId            String?
   createdAt           DateTime  @default(now())
   shareLink           SharableLink?
-  TranscodingStatus   Boolean @default(false)
+  transcodingStatus   Boolean @default(false)
+  s3key               String  @default("")
   streamUrl           String?
+  isPublic            Boolean @default(false)
 }
 
 model Folders {
