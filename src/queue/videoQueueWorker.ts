@@ -12,18 +12,25 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
     console.log("inside videoQueueWorker");
 
     const { fileId, folderName, hlsOutputPath, inputPath } = job.data;
-    let streamUrl = `/hls/${folderName}/output_720p.m3u8`;
+
+    console.log("File ID:", fileId);
+    console.log("Input path:", inputPath);
+    console.log("HLS output path:", hlsOutputPath);
 
     // Find the original resolution of the video
     const originalResloution = getOriginalResolution(inputPath);
+    console.log("Original resolution:", originalResloution);
+
     const validVariants = getValidResolutionVariants(originalResloution, inputPath);
+    console.log("Valid variants:", validVariants);
 
     const progressMap = await getAllResolutionStatus(fileId);
+    console.log("Progress map:", progressMap);
 
+    console.log("before the loop");
     for (const res of validVariants) {
 
         const status = progressMap[res.height];
-
         if (status == "done") {
             console.log(`Skipping ${res.height}p , already done`);
             continue;
@@ -31,9 +38,17 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
 
         await setResolutionStatus(fileId, res.height, "processing");
 
-        await converToHLS(inputPath, hlsOutputPath, res.height);
+        console.log(`Processing ${res.height}p...`);
 
-        await setResolutionStatus(fileId, res.height, "done");
+        try {
+            await converToHLS(inputPath, hlsOutputPath, res.height);
+            console.log(`Done: ${res.height}p`);
+            await setResolutionStatus(fileId, res.height, "done");
+        } catch (err) {
+            console.error(`Failed ${res.height}p:`, err);
+            await setResolutionStatus(fileId, res.height, "failed");
+        }
+
     }
 
     //generate the master playlist
@@ -45,7 +60,7 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
 
 
     // Final url for all-resolution stream
-    streamUrl = `/hls/${folderName}/master.m3u8`;
+    let streamUrl = `/hls/${folderName}/master.m3u8`;
 
     try {
         await prisma.file.update({

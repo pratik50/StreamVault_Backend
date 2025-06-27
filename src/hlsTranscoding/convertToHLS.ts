@@ -22,21 +22,23 @@ export const converToHLS = (
         const outputFile = path.join(diffResFolder, `output_${resolution}p.m3u8`);
         const segmentPattern = path.join(diffResFolder,`segment_${resolution}_%03d.ts`); 
 
+        
         // IMP (actual hls chunks creation for the vedio)
         ffmpeg(inputPath)
             .addOptions([
                 `-vf scale=-2:${resolution}`,
-                "-preset", "veryfast",
-                "-g", "48",
-                "-sc_threshold", "0",
-                "-map", "0:v:0",
-                "-map", "0:a?",           
-                "-c:v", "libx264",
-                "-c:a", "aac",
-                "-b:a", "128k",
-                "-ac", "2",
-                "-hls_time", "6",
-                "-hls_playlist_type", "vod",
+                "-preset veryfast",
+                "-g 48",
+                "-sc_threshold 0",
+                "-map 0:v:0",
+                "-map 0:a?",           
+                "-c:v libx264",
+                "-c:a aac",
+                "-strict -2",
+                "-b:a 128k",
+                "-ac 2",
+                "-hls_time 6",
+                "-hls_playlist_type vod",
                 `-hls_segment_filename ${segmentPattern}`,
             ])
             .output(outputFile)

@@ -48,7 +48,7 @@ playwright-report/
 allure-results/
 
 # HLS transcoded video output
-public/hls/
+hlsTranscoded/
 
 # Uploaded raw files
-uploads/
+rawUploads/

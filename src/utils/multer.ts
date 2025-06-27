@@ -1,8 +1,23 @@
 import multer, { FileFilterCallback, memoryStorage } from "multer";
 import { Request } from "express";
+import path from "path";
+import fs from "fs";
+
+// Use __dirname to get the absolute path of the current script
+const rawUploadsDir = path.join(process.cwd(), "/rawUploads");
+
+// Ensure directory exists (synchronously)
+if (!fs.existsSync(rawUploadsDir)) {
+    fs.mkdirSync(rawUploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, rawUploadsDir),
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+});
 
 export const upload = multer({
-    storage: memoryStorage(),
+    storage: storage,
     fileFilter: (
         req: Request,
         file: Express.Multer.File,

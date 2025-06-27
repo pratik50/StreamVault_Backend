@@ -38,12 +38,13 @@ export const uploadFile = async (req: Request, res: Response) => {
         }
 
         const key = `uploads/${Date.now()}-${file.originalname}`;
-        const url = await uploadToS3(file.buffer, key, file.mimetype, false);
+        
+       // const url = await uploadToS3(file.buffer, key, file.mimetype, false);
 
         const saved = await prisma.file.create({
             data: {
                 name: file.originalname,
-                url: url,
+                url: "url",                     //dont forget to change this ❗❗
                 type: file.mimetype,
                 size: file.size,
                 userId: userId,
@@ -61,8 +62,8 @@ export const uploadFile = async (req: Request, res: Response) => {
 
         if (isVideo) {
             const uniqueNameForFolders = uuidv4();
-            const hlsOutputPath = path.join("public/hls", uniqueNameForFolders);
-            const inputPath = key;
+            const inputPath = file.path;
+            const hlsOutputPath = path.join("hlsTranscoded/", uniqueNameForFolders);
 
             const jobData = {
                 fileId: saved.id,
