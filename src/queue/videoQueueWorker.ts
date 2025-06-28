@@ -7,27 +7,21 @@ import { getOriginalResolution, getValidResolutionVariants } from "../hlsTransco
 import { getAllResolutionStatus, setResolutionStatus } from "../lib/transcodeTracker";
 import { videoQueue } from "./videoQueue";
 import { JobState } from 'bullmq';
+import { uploadFolderToS3 } from "../lib/s3/uploadFolderToS3";
+import { cleanupLocalFile } from "../utils/cleanupLocalFile";
 
 export const videoQueueWorker = new Worker("videoQueue", async job => {
     console.log("inside videoQueueWorker");
 
     const { fileId, folderName, hlsOutputPath, inputPath } = job.data;
 
-    console.log("File ID:", fileId);
-    console.log("Input path:", inputPath);
-    console.log("HLS output path:", hlsOutputPath);
-
     // Find the original resolution of the video
     const originalResloution = getOriginalResolution(inputPath);
-    console.log("Original resolution:", originalResloution);
 
     const validVariants = getValidResolutionVariants(originalResloution, inputPath);
-    console.log("Valid variants:", validVariants);
 
     const progressMap = await getAllResolutionStatus(fileId);
-    console.log("Progress map:", progressMap);
 
-    console.log("before the loop");
     for (const res of validVariants) {
 
         const status = progressMap[res.height];
@@ -38,7 +32,6 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
 
         await setResolutionStatus(fileId, res.height, "processing");
 
-        console.log(`Processing ${res.height}p...`);
 
         try {
             await converToHLS(inputPath, hlsOutputPath, res.height);
@@ -72,6 +65,15 @@ export const videoQueueWorker = new Worker("videoQueue", async job => {
         });
     } catch (err) {
         console.log(err);
+    }
+
+    try{
+        await uploadFolderToS3(hlsOutputPath, `stream/${folderName}`);
+
+        cleanupLocalFile(inputPath)
+        cleanupLocalFile(hlsOutputPath)
+    }catch(err) {
+        console.error(`Failed video uploding for s3 or local cleanig`, err);
     }
 
     await redisClient.del(`video-status:${fileId}`);

@@ -3,10 +3,8 @@ import { Request } from "express";
 import path from "path";
 import fs from "fs";
 
-// Use __dirname to get the absolute path of the current script
 const rawUploadsDir = path.join(process.cwd(), "/rawUploads");
 
-// Ensure directory exists (synchronously)
 if (!fs.existsSync(rawUploadsDir)) {
     fs.mkdirSync(rawUploadsDir, { recursive: true });
 }
