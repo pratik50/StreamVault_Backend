@@ -23,6 +23,7 @@ export const deleteFile = async (req: Request, res: Response) => {
             return;
         }
 
+        // ‼️ change it for deleting from s3 bucket
         const filePath = path.join(__dirname, "../../uploads", file.url.split("/uploads/")[1]);
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import prisma from "../../../prisma/client";
-import fs from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { videoQueue } from "../../../queue/videoQueue";
@@ -37,20 +36,37 @@ export const uploadFile = async (req: Request, res: Response) => {
             return
         }
 
-        const key = `uploads/${Date.now()}-${file.originalname}`;
-        
-       // const url = await uploadToS3(file.buffer, key, file.mimetype, false);
+        const isVideo = file.mimetype.startsWith("video/");
+        let saved;
 
-        const saved = await prisma.file.create({
-            data: {
-                name: file.originalname,
-                url: "url",                     //dont forget to change this ❗❗
-                type: file.mimetype,
-                size: file.size,
-                userId: userId,
-                streamUrl: null
-            }
-        });
+        if(!isVideo){
+            const key = `uploads/${Date.now()}-${file.originalname}`;
+            const url = await uploadToS3(file.buffer, key, file.mimetype, false);
+
+            saved = await prisma.file.create({
+                data: {
+                    name: file.originalname,
+                    url: url,                     
+                    type: file.mimetype,
+                    size: file.size,
+                    userId: userId,
+                    streamUrl: null
+                }
+            });
+
+        }else{
+             saved = await prisma.file.create({
+                data: {
+                    name: file.originalname,
+                    url: "null",
+                    type: file.mimetype,
+                    size: file.size,
+                    userId: userId,
+                    streamUrl: null
+                }
+            });
+        }
+        
 
         // response as ASA file uploaded
         res.status(201).json({
@@ -58,7 +74,6 @@ export const uploadFile = async (req: Request, res: Response) => {
             file: saved
         });
 
-        const isVideo = file.mimetype.startsWith("video/");
 
         if (isVideo) {
             const uniqueNameForFolders = uuidv4();
